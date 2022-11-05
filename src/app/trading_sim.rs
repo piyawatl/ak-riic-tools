@@ -255,10 +255,14 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
                         dp_table[sim_duration][count + 1].weight += combined_weight;
                         // fully credit Tequila for last order even if only worked partially
                         dp_table[sim_duration][count + 1].lmd += dp_table[t][count].lmd * wfactor
-                            + order_lmd[otype] as f64 * combined_weight * (sim_duration - t) as f64 / mod_dur as f64
+                            + order_lmd[otype] as f64 * combined_weight * (sim_duration - t) as f64
+                                / mod_dur as f64
                             + bonus_lmd[otype] * combined_weight;
                         dp_table[sim_duration][count + 1].gold += dp_table[t][count].gold * wfactor
-                            + order_gold[otype] as f64 * combined_weight * (sim_duration - t) as f64 / mod_dur as f64;
+                            + order_gold[otype] as f64
+                                * combined_weight
+                                * (sim_duration - t) as f64
+                                / mod_dur as f64;
                     }
                 }
             }
@@ -279,18 +283,18 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     let lmd_24 = total_lmd * 1440.0 / input.duration_minutes as f64;
     let gold_24 = total_gold * 1440.0 / input.duration_minutes as f64;
     let gold_24_extra = gold_24 + lmd_24 / 500.0;
-    let baseline_lmd = 1450.0*1440.0/203.4;
+    let baseline_lmd = 1450.0 * 1440.0 / 203.4;
     let baseline_gold = 20.0;
     let net_tp_speed = lmd_24 / baseline_lmd;
     let net_gold_speed = gold_24_extra / baseline_gold;
     TradingPostProductionOutput {
-        stall_chance: stalled_weight*100.0,
-        average_stall_time: stalled_time/60.0,
+        stall_chance: stalled_weight * 100.0,
+        average_stall_time: stalled_time / 60.0,
         total_lmd: total_lmd,
         total_gold: total_gold,
         daily_lmd: lmd_24,
         daily_gold: gold_24,
-        net_lmd_speed: net_tp_speed,
-        net_gold_speed: net_gold_speed,
+        net_lmd_speed: net_tp_speed * 100.0,
+        net_gold_speed: net_gold_speed * 100.0,
     }
 }

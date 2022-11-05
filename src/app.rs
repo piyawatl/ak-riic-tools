@@ -1,3 +1,4 @@
+use egui::Ui;
 use std::cmp::{max, min};
 use uuid::Uuid;
 
@@ -5,7 +6,6 @@ use self::toggle_switch::toggle;
 pub mod toggle_switch;
 pub mod trading_sim;
 use trading_sim::*;
-
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -58,7 +58,7 @@ impl eframe::App for TradingPostProductionApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("TP calc");
-            
+
             ui.horizontal(|ui| {
                 ui.label("Edit Mode");
                 ui.add(toggle(&mut self.is_editing));
@@ -120,7 +120,7 @@ impl eframe::App for TradingPostProductionApp {
                                     });
                             }
                             ui.end_row();
-    
+
                             // TP Order Limit
                             ui.label("TP order limit: ");
                             if !&self.is_editing {
@@ -129,13 +129,13 @@ impl eframe::App for TradingPostProductionApp {
                                 ui.add(egui::Slider::new(&mut input.capacity, 0..=38));
                             }
                             ui.end_row();
-    
+
                             // TP Speed
                             ui.label("TP speed: ");
                             if !&self.is_editing {
                                 ui.label(input.speed100.to_string() + "%");
                             } else {
-                                ui.add(egui::Slider::new(&mut input.speed100, 0..=300).suffix("%"));
+                                ui.add(egui::Slider::new(&mut input.speed100, 40..=300).suffix("%"));
                                 ui.vertical_centered_justified(|ui| {
                                     if ui.button("+1").clicked() {
                                         input.speed100 = min(300, input.speed100 + 1);
@@ -146,7 +146,7 @@ impl eframe::App for TradingPostProductionApp {
                                 });
                             }
                             ui.end_row();
-    
+
                             // Duration
                             ui.label("Duration: ");
                             if !&self.is_editing {
@@ -180,19 +180,19 @@ impl eframe::App for TradingPostProductionApp {
                                         new_button(ui, 360, "+6h");
                                         new_button(ui, 10, "+10m");
                                         ui.end_row();
-    
+
                                         new_button(ui, 60, "+1h");
                                         new_button(ui, 1, "+1m");
                                         ui.end_row();
-    
+
                                         ui.centered_and_justified(|ui| ui.add(label_hour));
                                         ui.centered_and_justified(|ui| ui.add(label_minute));
                                         ui.end_row();
-    
+
                                         new_button(ui, -60, "-1h");
                                         new_button(ui, -1, "-1m");
                                         ui.end_row();
-    
+
                                         new_button(ui, -360, "-6h");
                                         new_button(ui, -10, "-10m");
                                         ui.end_row();
@@ -204,7 +204,7 @@ impl eframe::App for TradingPostProductionApp {
                 // if ui.button("🔧").clicked() {}
                 // if ui.button("✅").clicked() {}
                 ui.end_row();
-    
+
                 // Tailoring Skills
                 ui.group(|ui| {
                     ui.vertical(|ui| {
@@ -219,13 +219,13 @@ impl eframe::App for TradingPostProductionApp {
                                 .spacing([4.0, 4.0])
                                 .show(ui, |ui| {
                                     for (skill, ramp, _id) in input.tailoring_ramped.iter_mut() {
-                                                ui.label(skill.to_string());
-                                                ui.label(
-                                                    format!("{:0>2}", *ramp / 60).to_string()
-                                                        + "h"
-                                                        + &*(format!("{:0>2}", *ramp % 60))
-                                                        + "m",
-                                                );
+                                        ui.label(skill.to_string());
+                                        ui.label(
+                                            format!("{:0>2}", *ramp / 60).to_string()
+                                                + "h"
+                                                + &*(format!("{:0>2}", *ramp % 60))
+                                                + "m",
+                                        );
                                         ui.end_row();
                                     }
                                 });
@@ -266,12 +266,12 @@ impl eframe::App for TradingPostProductionApp {
                                                     new_button(ui, 180, "max");
                                                     new_button(ui, 10, "+10m");
                                                     ui.end_row();
-    
+
                                                     ui.label("");
                                                     new_button(ui, 60, "+1h");
                                                     new_button(ui, 1, "+1m");
                                                     ui.end_row();
-    
+
                                                     // ui.label("");
                                                     egui::ComboBox::from_id_source(&id)
                                                         .width(50.0)
@@ -293,12 +293,12 @@ impl eframe::App for TradingPostProductionApp {
                                                         ui.add(label_minute)
                                                     });
                                                     ui.end_row();
-    
+
                                                     ui.label("");
                                                     new_button(ui, -60, "-1h");
                                                     new_button(ui, -1, "-1m");
                                                     ui.end_row();
-    
+
                                                     ui.label("");
                                                     new_button(ui, -180, "min");
                                                     new_button(ui, -10, "-10m");
@@ -306,6 +306,7 @@ impl eframe::App for TradingPostProductionApp {
                                                 });
                                         });
                                     });
+                                    ui.end_row();
                                     retained
                                 });
                                 if input.tailoring_ramped.len() < 3 {
@@ -322,10 +323,8 @@ impl eframe::App for TradingPostProductionApp {
                             });
                     }
                     });
-                    
                 });
                 ui.end_row();
-    
                 // special skills
                 ui.group(|ui| {
                     if !&self.is_editing {
@@ -382,16 +381,52 @@ impl eframe::App for TradingPostProductionApp {
                     }
                 });
                 ui.end_row();
-    
+
             });
 
             //// Output
-
             ui.separator();
-
             if ui.button("Calculate").clicked() {
                 *output = simulate_tp_production(input).clone();
             }
+            egui::Grid::new("output grid")
+                .num_columns(4)
+                .spacing([4.0, 4.0])
+                .show(ui, |ui| {
+                    let right_align_label = |ui: &mut Ui, text: String| {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            ui.label(text);
+                        });
+                    };
+                    ui.label("Stall chance");
+                    right_align_label(ui, format!("{:.4}", output.stall_chance));
+                    ui.label("%");
+                    ui.end_row();
+                    ui.label("Average stall time");
+                    right_align_label(ui, format!("{:.4}", output.average_stall_time));
+                    ui.label("minutes");
+                    ui.end_row();
+                    ui.label("Total LMD");
+                    right_align_label(ui, format!("{:.4}", output.total_lmd));
+                    ui.end_row();
+                    ui.label("Total Gold");
+                    right_align_label(ui, format!("{:.4}", output.total_gold));
+                    ui.end_row();
+                    ui.label("Daily LMD");
+                    right_align_label(ui, format!("{:.4}", output.daily_lmd));
+                    ui.end_row();
+                    ui.label("Daily Gold");
+                    right_align_label(ui, format!("{:.4}", output.daily_gold));
+                    ui.end_row();
+                    ui.label("Net LMD Speed");
+                    right_align_label(ui, format!("{:.4}", output.net_lmd_speed));
+                    ui.label("%");
+                    ui.end_row();
+                    ui.label("Net Gold Speed");
+                    right_align_label(ui, format!("{:.4}", output.net_gold_speed));
+                    ui.label("%");
+                    ui.end_row();
+                });
             // ui.horizontal(|ui| ui.label(""));
         });
 

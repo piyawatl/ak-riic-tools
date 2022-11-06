@@ -56,7 +56,7 @@ pub struct TradingPostProductionInput {
     pub phase: TradingPostPhase,
     pub capacity: i32,
     pub speed100: i32,
-    pub tailoring_ramped: Vec<(TradingPostTailoringSkill, i32, u128)>,
+    pub tailoring_ramped: Vec<(TradingPostTailoringSkill, i32)>,
     pub tequila_phase: HighRarityOperatorPhase,
     pub proviso_phase: HighRarityOperatorPhase,
     pub jaye_phase: HighRarityOperatorPhase,
@@ -155,12 +155,12 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     let mut dp_table = vec![vec![Cell::default(); order_limit as usize]; sim_duration as usize + 1];
 
     fn highest_ramp(
-        tailoring_ramped: &[(TradingPostTailoringSkill, i32, u128)],
+        tailoring_ramped: &[(TradingPostTailoringSkill, i32)],
         elapsed_time: i32,
     ) -> f64 {
         tailoring_ramped
             .iter()
-            .map(|(tailor, ramped, _)| {
+            .map(|(tailor, ramped)| {
                 let ramped_progress = (ramped * 60 + elapsed_time) as f64 / 9000.0;
                 let ramp_multiplier = match tailor {
                     TradingPostTailoringSkill::Alpha => 0.5,

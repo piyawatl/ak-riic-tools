@@ -1,6 +1,5 @@
 use egui::Ui;
 use std::cmp::{max, min};
-use uuid::Uuid;
 
 use self::toggle_switch::toggle;
 pub mod toggle_switch;
@@ -218,7 +217,7 @@ impl eframe::App for TradingPostProductionApp {
                                 .num_columns(4)
                                 .spacing([4.0, 4.0])
                                 .show(ui, |ui| {
-                                    for (skill, ramp, _id) in input.tailoring_ramped.iter_mut() {
+                                    for (skill, ramp) in input.tailoring_ramped.iter_mut() {
                                         ui.label(skill.to_string());
                                         ui.label(
                                             format!("{:0>2}", *ramp / 60)
@@ -236,7 +235,8 @@ impl eframe::App for TradingPostProductionApp {
                             .spacing([4.0, 4.0])
                             .show(ui, |ui| {
                                 // ui.horizontal(|ui| {
-                                input.tailoring_ramped.retain_mut(|(skill, ramp, id)| {
+                                let mut i = 0;
+                                input.tailoring_ramped.retain_mut(|(skill, ramp)| {
                                     let mut retained = true;
                                     let label_hour = egui::Label::new(
                                         format!("{:0>2}", *ramp / 60) + "h",
@@ -249,7 +249,7 @@ impl eframe::App for TradingPostProductionApp {
                                             if ui.button("❌").clicked() {
                                                 retained = false;
                                             }
-                                            egui::Grid::new(format!("{}ramped", &id))
+                                            egui::Grid::new(format!("ramped{}", &i))
                                                 .num_columns(4)
                                                 .spacing([4.0, 4.0])
                                                 .show(ui, |ui| {
@@ -273,7 +273,7 @@ impl eframe::App for TradingPostProductionApp {
                                                     ui.end_row();
 
                                                     // ui.label("");
-                                                    egui::ComboBox::from_id_source(&id)
+                                                    egui::ComboBox::from_id_source(format!("tailorcombo{}", &i))
                                                         .width(50.0)
                                                         .selected_text(skill.to_string())
                                                         .show_ui(ui, |ui| {
@@ -307,6 +307,7 @@ impl eframe::App for TradingPostProductionApp {
                                         });
                                     });
                                     ui.end_row();
+                                    i += 1;
                                     retained
                                 });
                                 if input.tailoring_ramped.len() < 3 {
@@ -315,7 +316,6 @@ impl eframe::App for TradingPostProductionApp {
                                             input.tailoring_ramped.push((
                                                 TradingPostTailoringSkill::Alpha,
                                                 0,
-                                                Uuid::new_v4().as_u128(),
                                             ));
                                         }
                                     });

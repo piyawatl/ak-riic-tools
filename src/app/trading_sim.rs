@@ -178,32 +178,34 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     }
 
     // first order
-    for (otype, odur) in order_duration.iter().enumerate() {
-        let mod_dur = (*odur as f64 * 100.0 / input.speed100 as f64).ceil() as usize;
-        for (carried_time, dp_row) in dp_table.iter_mut().enumerate().take(mod_dur) {
-            // use current order distribution for first partial order
-            let current_ramp = highest_ramp(&input.tailoring_ramped, carried_time as i32);
-            let order_weight: Vec<f64> = tailoring_ramp_spec
-                .iter()
-                .map(|(base, peak)| base * (1.0 - current_ramp) + peak * current_ramp)
-                .collect();
+    {
+        // use current order distribution for first partial order
+        let current_ramp = highest_ramp(&input.tailoring_ramped, 0);
+        let order_weight: Vec<f64> = tailoring_ramp_spec
+            .iter()
+            .map(|(base, peak)| base * (1.0 - current_ramp) + peak * current_ramp)
+            .collect();
+        for (otype, odur) in order_duration.iter().enumerate() {
+            let mod_dur = (*odur as f64 * 100.0 / input.speed100 as f64).ceil() as usize;
             let weight = order_weight[otype] / mod_dur as f64;
-            if carried_time < sim_duration {
-                // first order ends in sim duration
-                dp_row[0].weight += weight;
-                // tequila does not add LMD to first partial order
-                dp_row[0].lmd +=
-                    order_lmd[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
-                dp_row[0].gold +=
-                    order_gold[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
-            } else {
-                // first order ends after sim duration
-                dp_row[0].weight += weight;
-                // tequila does not add LMD to first partial order
-                dp_row[0].lmd +=
-                    order_lmd[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
-                dp_row[0].gold +=
-                    order_gold[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
+            for (carried_time, dp_row) in dp_table.iter_mut().enumerate().take(mod_dur) {
+                if carried_time < sim_duration {
+                    // first order ends in sim duration
+                    dp_row[0].weight += weight;
+                    // tequila does not add LMD to first partial order
+                    dp_row[0].lmd +=
+                        order_lmd[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
+                    dp_row[0].gold +=
+                        order_gold[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
+                } else {
+                    // first order ends after sim duration
+                    dp_row[0].weight += weight;
+                    // tequila does not add LMD to first partial order
+                    dp_row[0].lmd +=
+                        order_lmd[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
+                    dp_row[0].gold +=
+                        order_gold[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
+                }
             }
         }
     }

@@ -132,19 +132,8 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     let order_lmd = [1000 + 500 * proviso_mod, 1500 + 500 * proviso_mod, 2000];
     let order_gold = [-2 - proviso_mod, -3 - proviso_mod, -4];
     let order_duration = [144 * 60, 210 * 60, 276 * 60];
-    // let lmd_per_sec = order_lmd
-    //     .iter()
-    //     .zip(order_duration.iter())
-    //     .map(|(lmd, sec)| *lmd as f64 / *sec as f64);
-    // let gold_per_sec = order_gold
-    //     .iter()
-    //     .zip(order_duration.iter())
-    //     .map(|(gold, sec)| *gold as f64 / *sec as f64);
-
     let order_limit = input.capacity as usize;
     let sim_duration = (input.duration_minutes * 60) as usize;
-
-    // let mut dp_weight = Vec::with_capacity(sim_duration + 1);
 
     #[derive(Clone)]
     struct Cell {
@@ -192,7 +181,6 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     for (otype, odur) in order_duration.iter().enumerate() {
         let mod_dur = (*odur as f64 * 100.0 / input.speed100 as f64).ceil() as usize;
         for (carried_time, dp_row) in dp_table.iter_mut().enumerate().take(mod_dur) {
-        // for carried_time in 0..mod_dur {
             // use current order distribution for first partial order
             let current_ramp = highest_ramp(&input.tailoring_ramped, carried_time as i32);
             let order_weight: Vec<f64> = tailoring_ramp_spec

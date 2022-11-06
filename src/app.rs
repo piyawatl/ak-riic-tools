@@ -151,17 +151,17 @@ impl eframe::App for TradingPostProductionApp {
                             ui.label("Duration: ");
                             if !&self.is_editing {
                                 ui.label(
-                                    format!("{:0>2}", input.duration_minutes / 60).to_string()
+                                    format!("{:0>2}", input.duration_minutes / 60)
                                         + "h"
                                         + &*(format!("{:0>2}", input.duration_minutes % 60))
                                         + "m",
                                 );
                             } else {
                                 let label_hour = egui::Label::new(
-                                    format!("{:0>2}", input.duration_minutes / 60).to_string() + "h",
+                                    format!("{:0>2}", input.duration_minutes / 60) + "h",
                                 );
                                 let label_minute = egui::Label::new(
-                                    format!("{:0>2}", input.duration_minutes % 60).to_string() + "m",
+                                    format!("{:0>2}", input.duration_minutes % 60) + "m",
                                 );
                                 egui::Grid::new("shift duration")
                                     .num_columns(4)
@@ -210,7 +210,7 @@ impl eframe::App for TradingPostProductionApp {
                     ui.vertical(|ui| {
                         ui.label("Tailoring skills:");
                     if !&self.is_editing {
-                        if input.tailoring_ramped.len() == 0 {
+                        if input.tailoring_ramped.is_empty() {
                             ui.label("(none)");
                         }
                         else {
@@ -221,7 +221,7 @@ impl eframe::App for TradingPostProductionApp {
                                     for (skill, ramp, _id) in input.tailoring_ramped.iter_mut() {
                                         ui.label(skill.to_string());
                                         ui.label(
-                                            format!("{:0>2}", *ramp / 60).to_string()
+                                            format!("{:0>2}", *ramp / 60)
                                                 + "h"
                                                 + &*(format!("{:0>2}", *ramp % 60))
                                                 + "m",
@@ -239,10 +239,10 @@ impl eframe::App for TradingPostProductionApp {
                                 input.tailoring_ramped.retain_mut(|(skill, ramp, id)| {
                                     let mut retained = true;
                                     let label_hour = egui::Label::new(
-                                        format!("{:0>2}", *ramp / 60).to_string() + "h",
+                                        format!("{:0>2}", *ramp / 60) + "h",
                                     );
                                     let label_minute = egui::Label::new(
-                                        format!("{:0>2}", *ramp % 60).to_string() + "m",
+                                        format!("{:0>2}", *ramp % 60) + "m",
                                     );
                                     ui.group(|ui| {
                                         ui.vertical_centered_justified(|ui| {
@@ -387,7 +387,7 @@ impl eframe::App for TradingPostProductionApp {
             //// Output
             ui.separator();
             if ui.button("Calculate").clicked() {
-                *output = simulate_tp_production(input).clone();
+                *output = simulate_tp_production(input);
             }
             egui::Grid::new("output grid")
                 .num_columns(4)

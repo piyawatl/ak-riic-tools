@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize, serde::Serialize, PartialEq, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Eq, Clone)]
 pub enum TradingPostPhase {
     L1,
     L2,
@@ -15,7 +15,7 @@ impl ToString for TradingPostPhase {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, PartialEq, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Eq, Clone)]
 pub enum TradingPostTailoringSkill {
     Alpha,
     Beta,
@@ -30,7 +30,7 @@ impl ToString for TradingPostTailoringSkill {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Eq)]
 pub enum HighRarityOperatorPhase {
     None,
     E0,
@@ -166,7 +166,7 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     let mut dp_table = vec![vec![Cell::default(); order_limit as usize]; sim_duration as usize + 1];
 
     fn highest_ramp(
-        tailoring_ramped: &Vec<(TradingPostTailoringSkill, i32, u128)>,
+        tailoring_ramped: &[(TradingPostTailoringSkill, i32, u128)],
         elapsed_time: i32,
     ) -> f64 {
         tailoring_ramped
@@ -191,7 +191,8 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     // first order
     for (otype, odur) in order_duration.iter().enumerate() {
         let mod_dur = (*odur as f64 * 100.0 / input.speed100 as f64).ceil() as usize;
-        for carried_time in 0..mod_dur {
+        for (carried_time, dp_row) in dp_table.iter_mut().enumerate().take(mod_dur) {
+        // for carried_time in 0..mod_dur {
             // use current order distribution for first partial order
             let current_ramp = highest_ramp(&input.tailoring_ramped, carried_time as i32);
             let order_weight: Vec<f64> = tailoring_ramp_spec
@@ -201,19 +202,19 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
             let weight = order_weight[otype] / mod_dur as f64;
             if carried_time < sim_duration {
                 // first order ends in sim duration
-                dp_table[carried_time][0].weight += weight;
+                dp_row[0].weight += weight;
                 // tequila does not add LMD to first partial order
-                dp_table[carried_time][0].lmd +=
+                dp_row[0].lmd +=
                     order_lmd[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
-                dp_table[carried_time][0].gold +=
+                dp_row[0].gold +=
                     order_gold[otype] as f64 * weight * (carried_time as f64 / mod_dur as f64);
             } else {
                 // first order ends after sim duration
-                dp_table[carried_time][0].weight += weight;
+                dp_row[0].weight += weight;
                 // tequila does not add LMD to first partial order
-                dp_table[carried_time][0].lmd +=
+                dp_row[0].lmd +=
                     order_lmd[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
-                dp_table[carried_time][0].gold +=
+                dp_row[0].gold +=
                     order_gold[otype] as f64 * weight * (sim_duration as f64 / mod_dur as f64);
             }
         }
@@ -290,8 +291,8 @@ pub fn simulate_tp_production(input: &TradingPostProductionInput) -> TradingPost
     TradingPostProductionOutput {
         stall_chance: stalled_weight * 100.0,
         average_stall_time: stalled_time / 60.0,
-        total_lmd: total_lmd,
-        total_gold: total_gold,
+        total_lmd,
+        total_gold,
         daily_lmd: lmd_24,
         daily_gold: gold_24,
         net_lmd_speed: net_tp_speed * 100.0,
